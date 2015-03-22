@@ -1,0 +1,11 @@
+[package]
+
+name = "ws_server"
+version = "0.0.1"
+authors = ["Nathan Fuchs"]
+
+[dependencies]
+websocket = "*"
+
+[dependencies.task_pool]
+git = "https://github.com/fuchsnj/task_pool.git"
