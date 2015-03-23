@@ -83,8 +83,8 @@ impl Websocket{
 }
 
 pub struct SSLCert{
-	certificate_file: String,
-	key_file: String
+	pub certificate_file: String,
+	pub key_file: String
 }
 
 pub trait Handler: Sized{
