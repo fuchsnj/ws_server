@@ -6,6 +6,7 @@ authors = ["Nathan Fuchs"]
 
 [dependencies]
 websocket = "*"
+openssl = "*"
 
 [dependencies.task_pool]
 git = "https://github.com/fuchsnj/task_pool.git"

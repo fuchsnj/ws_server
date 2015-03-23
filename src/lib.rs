@@ -1,5 +1,6 @@
 extern crate websocket;
 extern crate task_pool;
+extern crate openssl;
 
 use task_pool::Pool;
 use std::net::ToSocketAddrs;
@@ -13,6 +14,9 @@ use websocket::stream::WebSocketStream;
 use std::collections::HashMap;
 use std::sync::{Mutex,Arc};
 use websocket::ws::sender::Sender;
+use openssl::ssl::{SslContext, SslMethod};
+use openssl::x509::X509FileType;
+use std::path::Path;
 
 
 struct MyHandler;
@@ -40,13 +44,16 @@ impl Handler for MyHandler{
 
 #[test]
 fn it_works() {
-	MyHandler::start("0.0.0.0:8080");
+	MyHandler::start("0.0.0.0:8080", None);
 }
 
 pub enum Event{
 	Close,
 	Text(String),
 	Binary(Vec<u8>),
+}
+pub enum Protocol{
+
 }
 
 pub struct Websocket{
@@ -75,12 +82,16 @@ impl Websocket{
 	}
 }
 
+pub struct SSLCert{
+	certificate_file: String,
+	key_file: String
+}
+
 pub trait Handler: Sized{
 	fn new(&Websocket) -> Self;
 	fn handle(&self, Event, &mut Websocket);
-	fn start<A>(addr: A) where A: ToSocketAddrs{
+	fn run_server(server: websocket::Server){
 		let mut pool = Pool::new();
-		let server = websocket::Server::bind(addr).unwrap();
 		for conn in server{
 			println!("new incoming ws connection...");
 			pool.add_task(move ||{
@@ -139,6 +150,21 @@ pub trait Handler: Sized{
 			});
 		}
 		pool.join();
+	}
+	fn start<A>(addr: A, ssl: Option<SSLCert>) where A: ToSocketAddrs{
+		match ssl{
+			Some(cert) => {
+				let mut context = SslContext::new(SslMethod::Tlsv1).unwrap();
+				let _ = context.set_certificate_file(&(Path::new(&cert.certificate_file)), X509FileType::PEM);
+				let _ = context.set_private_key_file(&(Path::new(&cert.key_file)), X509FileType::PEM);
+				let server = websocket::Server::bind_secure(addr, &context).unwrap();
+				Self::run_server(server);
+			},
+			None => {
+				let server = websocket::Server::bind(addr).unwrap();
+				Self::run_server(server);
+			}
+		};
 	}
 }
 
