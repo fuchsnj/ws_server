@@ -8,5 +8,5 @@ authors = ["Nathan Fuchs"]
 websocket = "*"
 openssl = "*"
 
-[dependencies.task_pool]
-git = "https://github.com/fuchsnj/task_pool.git"
+#[dependencies.task_pool]
+#git = "https://github.com/fuchsnj/task_pool.git"

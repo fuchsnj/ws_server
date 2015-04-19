@@ -1,8 +1,6 @@
 extern crate websocket;
-extern crate task_pool;
 extern crate openssl;
 
-use task_pool::Pool;
 use std::net::ToSocketAddrs;
 use std::thread;
 //use websocket;
@@ -91,10 +89,9 @@ pub trait Handler: Sized{
 	fn new(&Websocket) -> Self;
 	fn handle(&self, Event, &mut Websocket);
 	fn run_server(server: websocket::Server){
-		let mut pool = Pool::new();
 		for conn in server{
 			println!("new incoming ws connection...");
-			pool.add_task(move ||{
+			thread::spawn(move ||{
 				let request = match conn{
 					Err(err) => {
 						println!("connection error: {}",err);
@@ -149,7 +146,6 @@ pub trait Handler: Sized{
 				}
 			});
 		}
-		pool.join();
 	}
 	fn start<A>(addr: A, ssl: Option<SSLCert>) where A: ToSocketAddrs{
 		match ssl{
