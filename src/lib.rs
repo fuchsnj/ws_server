@@ -87,7 +87,7 @@ pub struct SSLCert{
 
 pub trait Handler: Sized{
 	fn new(&Websocket) -> Self;
-	fn handle(&self, Event, &mut Websocket);
+	fn handle(&mut self, Event, &mut Websocket);
 	fn run_server(server: websocket::Server){
 		for conn in server{
 			println!("new incoming ws connection...");
