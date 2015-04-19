@@ -22,7 +22,7 @@ impl Handler for MyHandler{
 	fn new(ws: &Websocket) -> MyHandler{
 		MyHandler
 	}
-	fn handle(&self, event: Event, ws: &mut Websocket){
+	fn handle(&mut self, event: Event, ws: &mut Websocket){
 		match event{
 			Event::Close => {
 				println!("WS CLOSED");
@@ -116,7 +116,7 @@ pub trait Handler: Sized{
 				};
 
 				let mut ws = Websocket::new(sender);
-				let handler = Self::new(&ws);
+				let mut handler = Self::new(&ws);
 
 				for message in receiver.incoming_messages::<websocket::Message>(){
 					match message{
