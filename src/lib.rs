@@ -54,27 +54,31 @@ pub enum Protocol{
 
 }
 
+#[derive(Clone)]
 pub struct Websocket{
-	sender: websocket::server::sender::Sender<WebSocketStream>
+	sender: Arc<Mutex<websocket::server::sender::Sender<WebSocketStream>>>
 }
 impl Websocket{
 	fn new(sender: websocket::server::sender::Sender<WebSocketStream>) -> Websocket{
 		Websocket{
-			sender: sender
+			sender: Arc::new(Mutex::new(sender))
 		}
 	}
 	pub fn send_text(&mut self, msg: &str){
-		self.sender.send_message(
+		let mut data = self.sender.lock().unwrap();
+		data.send_message(
 			Message::Text(msg.to_string())
 		);
 	}
 	pub fn send_binary(&mut self, data: Vec<u8>){
-		self.sender.send_message(
+		let mut ws = self.sender.lock().unwrap();
+		ws.send_message(
 			Message::Binary(data)
 		);
 	}
 	pub fn close(&mut self){
-		self.sender.send_message(
+		let mut ws = self.sender.lock().unwrap();
+		ws.send_message(
 			Message::Close(None)
 		);
 	}
