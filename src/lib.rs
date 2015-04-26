@@ -68,19 +68,19 @@ impl Websocket{
 		let mut data = self.sender.lock().unwrap();
 		data.send_message(
 			Message::Text(msg.to_string())
-		);
+		).unwrap();
 	}
 	pub fn send_binary(&mut self, data: Vec<u8>){
 		let mut ws = self.sender.lock().unwrap();
 		ws.send_message(
 			Message::Binary(data)
-		);
+		).unwrap();
 	}
 	pub fn close(&mut self){
 		let mut ws = self.sender.lock().unwrap();
 		ws.send_message(
 			Message::Close(None)
-		);
+		).unwrap();
 	}
 }
 
