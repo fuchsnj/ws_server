@@ -66,9 +66,12 @@ impl Websocket{
 	}
 	pub fn send_text(&mut self, msg: &str){
 		let mut data = self.sender.lock().unwrap();
-		data.send_message(
+		match data.send_message(
 			Message::Text(msg.to_string())
-		).unwrap();
+		){
+			Ok(_) => println!("ws send success: {}", msg),
+			Err(_) => println!("WS SEND FAILED: {}", msg)
+		}
 	}
 	pub fn send_binary(&mut self, data: Vec<u8>){
 		let mut ws = self.sender.lock().unwrap();
