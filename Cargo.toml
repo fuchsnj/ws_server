@@ -5,8 +5,8 @@ version = "0.0.1"
 authors = ["Nathan Fuchs"]
 
 [dependencies]
-websocket = "*"
-openssl = "*"
+websocket = "0.14.0"
+openssl = "0.7"
 
 #[dependencies.task_pool]
 #git = "https://github.com/fuchsnj/task_pool.git"

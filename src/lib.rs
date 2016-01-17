@@ -5,7 +5,7 @@ use std::net::ToSocketAddrs;
 use std::thread;
 //use websocket;
 use websocket::ws::receiver::Receiver;
-use websocket::message::Message;
+use websocket::message::{Message, Type};
 use websocket::stream::WebSocketStream;
 // use core::clone::Clone;
 // use core::marker::Sync;
@@ -64,26 +64,29 @@ impl Websocket{
 			sender: Arc::new(Mutex::new(sender))
 		}
 	}
-	pub fn send_text(&mut self, msg: &str){
-		let mut data = self.sender.lock().unwrap();
-		match data.send_message(
-			Message::Text(msg.to_string())
-		){
-			Ok(_) => println!("ws send success: {}", msg),
-			Err(_) => println!("WS SEND FAILED: {}", msg)
+	pub fn send_text(&mut self, data: &str){
+		let mut ws = self.sender.lock().unwrap();
+		let msg = Message::text(data);
+		match ws.send_message(&msg){
+			Ok(_) => println!("ws send success: {}", data),
+			Err(_) => println!("WS SEND FAILED: {}", data)
 		}
 	}
 	pub fn send_binary(&mut self, data: Vec<u8>){
 		let mut ws = self.sender.lock().unwrap();
-		ws.send_message(
-			Message::Binary(data)
-		).unwrap();
+		let msg = Message::binary(data);
+		match ws.send_message(&msg){
+			Ok(_) => println!("ws send success: <binary>"),
+			Err(_) => println!("WS SEND FAILED: <binary>")
+		}
 	}
 	pub fn close(&mut self){
 		let mut ws = self.sender.lock().unwrap();
-		ws.send_message(
-			Message::Close(None)
-		).unwrap();
+		let msg = Message::close();
+		match ws.send_message(&msg){
+			Ok(_) => println!("ws close success: <binary>"),
+			Err(_) => println!("WS CLOSE FAILED: <binary>")
+		}
 	}
 }
 
@@ -121,34 +124,33 @@ pub trait Handler: Sized{
 					},
 					Ok(client) => client.split()
 				};
-
 				let mut ws = Websocket::new(sender);
 				let mut handler = Self::new(&ws);
 
-				for message in receiver.incoming_messages::<websocket::Message>(){
-					match message{
-						Ok(Message::Text(msg)) => {
+				for message in receiver.incoming_messages(){
+					let message: Message = message.unwrap();
+					match message.opcode{
+						Type::Text => {
+							let data = message.payload.into_owned();
+							let msg = String::from_utf8(data).unwrap();
 							handler.handle(
 								Event::Text(msg), &mut ws
 							);
 						},
-						Ok(Message::Binary(data)) => {
+						Type::Binary => {
+							let data = message.payload.into_owned();
 							handler.handle(
 								Event::Binary(data), &mut ws
 							);
 						},
-						Ok(Message::Close(optional_close_data)) => {
+						Type::Close => {
 							handler.handle(
 								Event::Close, &mut ws
 							);
 							return;
 						},
-						Ok(Message::Ping(data)) => {},
-						Ok(Message::Pong(data)) => {},
-						Err(err) => {
-							println!("message err: {}", err);
-							return;
-						}
+						Type::Ping => {},
+						Type::Pong => {}
 					}
 				}
 			});
